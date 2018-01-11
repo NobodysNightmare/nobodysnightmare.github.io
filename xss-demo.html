@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>
+      function addChatMessage(author, message) {
+        element = $(".chat-message:first").clone();
+
+        // using the html method here allows the caller to inject any HTML tags
+        element.find(".author").html(author);
+        element.find(".message").html(message);
+
+        element.appendTo("#message-list");
+      }
+
+      function storeChatMessage(author, message) {
+        let historyString = sessionStorage.getItem("history") || "[]";
+        let history = JSON.parse(historyString);
+
+        history.push({ author: author, message: message });
+        historyString = JSON.stringify(history);
+
+        sessionStorage.setItem("history", historyString);
+      }
+
+      function initializeChat() {
+        let historyString = sessionStorage.getItem("history");
+        if(!historyString) return;
+
+        let history = JSON.parse(historyString);
+        for(let message of history) {
+          addChatMessage(message.author, message.message);
+        }
+      }
+
+      function clearChat() {
+        sessionStorage.clear();
+
+        element = $(".chat-message:first").clone();
+        list = $("#message-list");
+        list.text("");
+        element.appendTo(list);
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        Self-chat
+        <small>Where you can talk to yourself...</small>
+      </h1>
+
+      <div id="message-list">
+        <div class="panel panel-default chat-message">
+          <div class="panel-body">
+            <b class="author">Jan</b>
+
+            <p class="message">
+              This is a chat message. You can type your own one below.
+              Maybe the main purpose of this site is to demonstrate how
+              XSS vulnerabilities look like.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading">New message</div>
+        <div class="panel-body">
+          <form id="submit-form">
+            <div class="form-group">
+              <label for="author">Author</label>
+              <input type="text" class="form-control" id="author" placeholder="Your Name">
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea class="form-control" id="message" rows="5" placeholder="Enter your message. HTML is supported ;-)"></textarea>
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="clear-chat" class="btn btn-danger">Clear Chat</div>
+    </div>
+  </body>
+  <script>
+    $("#submit-form").submit(function(event) {
+      addChatMessage($("#author").val(), $("#message").val());
+      storeChatMessage($("#author").val(), $("#message").val());
+      event.preventDefault();
+    });
+
+    $("#clear-chat").click(function() {
+      clearChat();
+    });
+
+    initializeChat();
+  </script>
+</html>
